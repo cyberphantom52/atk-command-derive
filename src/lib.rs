@@ -68,14 +68,6 @@ pub fn derive(input: TokenStream) -> TokenStream {
             fn as_bytes(&self) -> &[u8] {
                 self.raw.as_slice()
             }
-
-            fn from_raw(raw: &[u8], report_id: u8, base_offset: usize) -> Self {
-                Self {
-                    raw: raw.to_owned(),
-                    base_offset,
-                    report_id,
-                }
-            }
         }
     };
 
