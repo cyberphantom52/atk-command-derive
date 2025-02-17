@@ -13,6 +13,21 @@ pub fn derive(input: TokenStream) -> TokenStream {
                 self.base_offset
             }
 
+            fn set_byte_pair(&mut self, value: u8, offset: usize) -> Result<(), &'static str> {
+                if offset < self.base_offset() {
+                    return Err("Provided offset is less than the base offset");
+                }
+
+                if offset >= self.raw.len() - 1 {
+                    return Err("Provided offset is greater than the length of the raw data");
+                }
+
+                self.raw[offset] = value;
+                self.raw[offset + 0x1] = 0x55u8.wrapping_sub(value);
+
+                Ok(())
+            }
+
             fn id(&self) -> CommandId {
                 self.raw[0x0].into()
             }
