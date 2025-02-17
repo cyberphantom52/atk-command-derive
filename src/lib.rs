@@ -47,12 +47,12 @@ pub fn derive(input: TokenStream) -> TokenStream {
             }
 
             fn eeprom_address(&self) -> EEPROMAddress {
-                let addr = u16::from_le_bytes([self.raw[0x2], self.raw[0x3]]);
+                let addr = u16::from_be_bytes([self.raw[0x2], self.raw[0x3]]);
                 addr.into()
             }
 
             fn set_eeprom_address(&mut self, address: EEPROMAddress) {
-                self.raw[0x2..0x4].copy_from_slice(&(address as u16).to_le_bytes());
+                self.raw[0x2..0x4].copy_from_slice(&(address as u16).to_be_bytes());
                 self.set_checksum();
             }
 
