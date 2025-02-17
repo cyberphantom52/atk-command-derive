@@ -2,19 +2,36 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
-#[proc_macro_derive(Command)]
+#[proc_macro_derive(Command, attributes(base_offset, report_id))]
 pub fn derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident;
 
+    // Default values
+    let mut base_offset: usize = 0x5;
+    let mut report_id: u8 = 0x8;
+
     let expanded = quote! {
-        impl Command for #name {
-            fn base_offset(&self) -> usize {
-                self.base_offset
+        impl #name {
+            fn base_offset() -> usize {
+                #base_offset
             }
 
+            fn report_id() -> u8 {
+                #report_id
+            }
+        }
+
+        // Allow automatic conversion from the struct to a Box<dyn Command>
+        impl From<#name> for Box<dyn Command> {
+            fn from(value: #name) -> Self {
+                Box::new(value)
+            }
+        }
+
+        impl Command for #name {
             fn set_byte_pair(&mut self, value: u8, offset: usize) -> Result<(), &'static str> {
-                if offset < self.base_offset() {
+                if offset < #base_offset {
                     return Err("Provided offset is less than the base offset");
                 }
 
@@ -74,7 +91,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
                     let sum_bytes: u16 = self.raw[0..0xf]
                         .iter()
                         .fold(0, |acc, &byte| acc + byte as u16);
-                    ((self.report_id as u16 + sum_bytes) & 0xff) as u8
+                    ((#report_id as u16 + sum_bytes) & 0xff) as u8
                 };
                 let checksum = 0x55u8.wrapping_sub(sum);
                 self.raw[0xf] = checksum;
